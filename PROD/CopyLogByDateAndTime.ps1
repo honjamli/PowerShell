@@ -5,18 +5,25 @@ $targetFolder = "C:\AAA\ProductionLogs\LotTracking\"
 
 #===================Function=============================================
 #function for get RemotePath and fillter key worlds
-Import-Module "C:\Power\PROD\GetLogList.ps1" 
+#Import-Module "\\Amkfiler1.amk.st.com\amk5fab\ICT\MSG-AUTO\AMK SITE\Lot Tracking_ScannGo\Logs Analysis\PStool\GetLogList.ps1" 
+Import-Module "C:\VSProbjet\powershell\PROD\PStool\GetLogList.ps1" 
 #function for get Input Date and time 
-Import-Module "C:\Power\PROD\GetInputDate.ps1" 
+#Import-Module "\\Amkfiler1.amk.st.com\amk5fab\ICT\MSG-AUTO\AMK SITE\Lot Tracking_ScannGo\Logs Analysis\PStool\GetInputDate.ps1" 
+Import-Module "C:\VSProbjet\powershell\PROD\PStool\GetInputDate.ps1" 
 #========================================================================
+$ListServerPath =  New-Object System.Collections.ArrayList  
+ 
+$RemotePath = "\\amksw91103\tibco_logs\" 
+#$RemotePath1 = "\\amksw91104\tibco_logs\"  
+#$RemotePath = "\\amknt131\tibco_logs\" 
+$RemotePath1 = "\\amknt132\tibco_logs\"   
+ 
+$ListServerPath.Addrange(@(Get-ChildItem  $RemotePath -Include *LotTracking*))
+$ListServerPath.Addrange(@(Get-ChildItem  $RemotePath1 -Include *LotTracking*))
 
-$ListServerPath =  New-Object System.Collections.Generic.List[System.Object]
-$RemotePath = "\\amknt131\tibco_logs\" 
-$RemotePath1 = "\\amknt132\tibco_logs\" 
-
-$ListServerPath=GetLogList($RemotePath)
-$ListServerPath+=GetLogList($RemotePath1)
-
+#show your copy paths
+#foreach ($a in $ListServerPath ){ write-host $a}
+  
 $return =GetInputDate
      
 $StartDate=$return.StartDate
@@ -31,24 +38,23 @@ $tempdate=Get-Date
 write-host "Start to copy files" $tempdate 
 $filecounter = 0 
 $passThru=0
-for ( $i = 0; $i -lt $ListServerPath.count; $i++){  
+for ( $i = 0; $i -lt $ListServerPath.count; $i++){
+ 
+#determine the folders' name include 2020 or not for skip copy file 
+if($ListServerPath[$i] -like '*'+$TEndDate.Substring(0,4)+'*')
+{ 
+    #write-host $ListServerPath[$i].ToString().EndsWith($TStartDate) 
+    if($ListServerPath[$i].ToString().EndsWith($TStartDate) -lt $TStartDate -or $ListServerPath[$i].ToString().EndsWith($TEndDate)-gt $TEndDate){
+        continue
+    }
+} 
 
-if($ListServerPath[$i].Length-gt 33){ 
-    if($ListServerPath[$i].Substring(34,8) -le $TStartDate -or $ListServerPath[$i].Substring(34,8)-ge $TEndDate){
-    continue 
-    }  
-}  
-
-Foreach($file in (Get-ChildItem $ListServerPath[$i])) {  
-
+Foreach($file in (Get-ChildItem $ListServerPath[$i])) {    
     #If($StartDate.DateTime -le $file.LastWriteTime -and $EndDate.DateTime -ge  $file.LastWriteTime) 
      If($file.LastWriteTime -ge $StartDate.DateTime -and $file.LastWriteTime -le $EndDate.DateTime ) 
-    {       
-  
-        if (!(Test-path (join-path $targetFolder $file.fullname )))
-        {
+    {   
+        if (!(Test-path (join-path $targetFolder $file.fullname ))) {
           $passThru= ( Copy-Item -Path  $file.fullname -Destination $targetFolder -Include *LotTracking* -passThru).count 
-                     
         } 
           $filecounter += $passThru 
          if($passThru -gt 0){
