@@ -1,0 +1,10 @@
+#This is your property file and need to create these folder by yourself
+
+#Prod-LotTracking folder in your loptop
+targetFolder=C:\AAA\ProductionLogs\LotTracking\
+
+#Prod-F13Lot_ScanNGo folder in your loptop
+otherFolder=C:\AAA\ProductionLogs\F13Lot_ScanNGo\
+
+#Test-F13Lot_ScanNGo folder in your loptop
+testFolder=C:\AAA\testServer\

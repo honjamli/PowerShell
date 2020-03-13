@@ -1,12 +1,23 @@
-﻿#===================User Default==============================================================================================
-#put copy to your laptop location must create by yourself
-$targetFolder = "C:\AAA\ProductionLogs\LotTracking\" 
-$otherFolder = "C:\AAA\ProductionLogs\F13Lot_ScanNGo\" 
-$testFolder = "C:\AAA\testServer\" 
+﻿#===================User Default============================================================================================== 
+$location = -join((Get-Location),"\")   
+$PropertyFilePath= Get-Item  $location*.property    
+$prop = get-content $PropertyFilePath 
+
+$prop | foreach {
+  $items = $_.split("=")
+  if ($items[0] -eq "targetFolder") {$targetFolder = $items[1].trim() -replace '"',''}
+  if ($items[0] -eq "otherFolder"){$otherFolder = $items[1].trim() -replace '"',''}
+  if ($items[0] -eq "testFolder"){$testFolder = $items[1].trim() -replace '"',''}
+}
+ write-host "Here are your PropertyPath !!!"
+ write-host $targetFolder
+ write-host $otherFolder
+ write-host $testFolder
+ write-host "=================================" 
 #=============================================================================================================================  
 
 #===================Function================================================================================================== 
-#Import-Module "\\Amkfiler1.amk.st.com\amk5fab\ICT\MSG-AUTO\AMK SITE\Lot Tracking_ScannGo\Logs Analysis\PStool\GetInputDate.ps1" 
+#Import-Module "\\Amkfiler1.amk.st.com\amk5fab\ICT\MSG-AUTO\AMK SITE\Lot Tracking_ScannGo\Logs Analysis\PStool\GetInputDate.ps1"  
 Import-Module "C:\VSProbjet\powershell\PROD\PStool\GetInputDate.ps1" 
 #=============================================================================================================================
 
@@ -49,7 +60,7 @@ if ($Flag -eq 'Y') {
         }
     }
     write-host  "F13_F13LOADER_ScanNGoGUI_logs copy finished!!!"
-    write-host "=========================================================================================="
+	write-host "=========================================================================================="
 }
 #===================PROD-RemotePath===========================================================================================
 #===================TEST-RemotePath===========================================================================================
@@ -71,7 +82,7 @@ if ($TestFlag -eq 'Y') {
         }
     }
     write-host  "TestServer-F13_F13LOADER_ScanNGoGUI_LotTracking_logs copy finished!!!"
-    write-host "=========================================================================================="
+	write-host "=========================================================================================="
 }
 #===================TEST-RemotePath===========================================================================================
 #show your copy paths
@@ -86,33 +97,48 @@ $TEndDate = $return.TEndDate
 
 write-host "Your StartDate is "  $StartDate
 write-host "Your EndDate is "$EndDate
-write-host "=========================================================="
+write-host "=========================================================================================="
 $tempdate = Get-Date
 write-host "Start to copy files" $tempdate 
 $filecounter = 0 
 $passThru = 0
 for ( $i = 0; $i -lt $ListServerPath.count; $i++) {
- 
+	
     #determine the folders' name include 2020 or not for skip copy file 
     if ($ListServerPath[$i] -like '*' + $TEndDate.Substring(0, 4) + '*') {  
-         $t=$ListServerPath[$i].Name
-         $tempDate=$t.Substring($t.LastIndexOf("_")+1,8)
+         $TmepPath=$ListServerPath[$i].Name
+         $tempDate=$TmepPath.Substring($TmepPath.LastIndexOf("_")+1,8)
         if ($tempDate -lt $TStartDate -or $tempDate -gt $TEndDate) {
             continue
         }
     } 
-
+	
     Foreach ($file in (Get-ChildItem $ListServerPath[$i])) {    
         #write-host $ListServerPath[$i] " " $file.Name " " $file.LastWriteTime 
-        If ($file.LastWriteTime -ge $StartDate.DateTime -and $file.LastWriteTime -le $EndDate.DateTime ) {   
-            if (!(Test-path (join-path $targetFolder $file.fullname ))) {
-                $passThru = ( Copy-Item -Path  $file.fullname -Destination $targetFolder -Include *LotTracking* -passThru).count 
+        If ($file.LastWriteTime -ge $StartDate.DateTime -and $file.LastWriteTime -le $EndDate.DateTime ) {  
+            $localpath=""
+            if([String]::IsNullOrEmpty($TmepPath)){  
+                $localpath=-join($targetFolder,"LotTracking\")
+            }
+            else{
+                $localpath= -join($targetFolder,$TmepPath) 
+            }
+
+            if (!(Test-Path $localpath)){
+                New-Item -ItemType Directory -Path $localpath
+                 Write-Host "$localpath Folder Created Successfully"
+            } 
+
+            if (!(Test-path (join-path $localpath $file.fullname ))) {
+                $passThru = ( Copy-Item -Path  $file.fullname -Destination $localpath -Include *LotTracking* -passThru).count 
             } 
             $filecounter += $passThru 
             if ($passThru -gt 0) {
-                write-host $t
+				#write-host $t 
+			    #write-host $tempDate  " "   $targetFolder 
                 write-host $ListServerPath[$i] " " $file " " $file.LastWriteTime 
                 #write-host $file.Name " " $file.LastWriteTime  
+				
             }
         }
     }
