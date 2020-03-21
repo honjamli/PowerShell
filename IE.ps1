@@ -10,8 +10,9 @@ while($ie.Busy){Sleep 1}
 
 #Hit "S" on the keyboard to hit the "Save" button on the download box
 $obj = new-object -com WScript.Shell
+#$obj.AppActivate('Internet Explorer')
 $obj.AppActivate('Internet Explorer')
-$obj.SendKeys('s')
+$obj.SendKeys('S')
 
 #Hit "Enter" to save the file
 $obj.SendKeys('{Enter}')

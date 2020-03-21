@@ -34,7 +34,9 @@ $RemotePath3 = "\\amksw91103\tibco_logs\"
 $RemotePath4 = "\\amksw91104\tibco_logs\"  
 ##Prod-F13_F13LOADER_ScanNGoGUI_logs  *F13* *ScanNGoGUI*
 $RemotePath5 = "\\amksw91103\logs\"
-$RemotePath6 = "\\amksw91104\logs\" 
+$RemotePath6 = "\\amksw91104\logs\"  
+$RemotePath9 = "\\amknt131\logs\"
+$RemotePath10 = "\\amknt132\logs\"
 ##TestServer-F13_F13LOADER_ScanNGoGUI_LotTracking_logs  *F13* *ScanNGoGUI* *LotTracking*
 $RemotePath7 = "\\amknt162\logs" 
 $RemotePath8 = "\\amknt163\logs" 
@@ -44,16 +46,28 @@ $ListServerPath.Addrange(@(Get-ChildItem  $RemotePath2 -Include *LotTracking*))
 $ListServerPath.Addrange(@(Get-ChildItem  $RemotePath3 -Include *LotTracking*))
 $ListServerPath.Addrange(@(Get-ChildItem  $RemotePath4 -Include *LotTracking*)) 
 
-$Flag = (Read-Host -Prompt 'Do you wnat copy F13_F13LOADER_ScanNGoGUI_logs ? If you want enter Y')
+$Flag = (Read-Host -Prompt 'Do you want copy F13_F13LOADER_ScanNGoGUI_logs ? If you want enter Y')
 write-host 'Your answer is: '  $Flag 
 #only 2020 logs
 $copydate = Get-Date 01/01/2020
 if ($Flag -eq 'Y') {
     $ListfilesPath.Addrange(@(Get-ChildItem  $RemotePath5 -Include *ScanNGo*, *F13* ))
-    $ListfilesPath.Addrange(@(Get-ChildItem  $RemotePath6 -Include *ScanNGo*, *F13* ))    
-    Foreach ($file in (Get-ChildItem $ListfilesPath)) {     
+    $ListfilesPath.Addrange(@(Get-ChildItem  $RemotePath6 -Include *ScanNGo*, *F13* )) 
+    $ListfilesPath.Addrange(@(Get-ChildItem  $RemotePath9 -Include *ScanNGo*, *F13* ))  
+    $ListfilesPath.Addrange(@(Get-ChildItem  $RemotePath10 -Include *ScanNGo*, *F13* ))  	
+	
+    Foreach ($file in (Get-ChildItem $ListfilesPath)) {  
+		#write-host  $file.Directory 
+		$Dir=$file.Directory -replace '\\\\',''
+		#write-host  $Dir
+		$Dir= -join ($otherFolder,$Dir)
+		#write-host  $Dir
+        if (!(Test-Path $Dir)){
+            New-Item -ItemType Directory -Path $Dir
+            Write-Host "$Dir Folder Created Successfully"
+        }		
         If ($file.LastWriteTime -ge $copydate.DateTime) {
-            $passThru = ( Copy-Item -Path  $file.fullname -Destination $otherFolder -passThru).count 
+            $passThru = ( Copy-Item -Path  $file.fullname -Destination $Dir -passThru).count 
             if ($passThru -gt 0) { 
                 write-host $file " " $file.LastWriteTime  
             }
@@ -64,7 +78,7 @@ if ($Flag -eq 'Y') {
 }
 #===================PROD-RemotePath===========================================================================================
 #===================TEST-RemotePath===========================================================================================
-$TestFlag = (Read-Host -Prompt 'Do you wnat copy TestServer-F13_F13LOADER_ScanNGoGUI_LotTracking.logs ? If you want enter Y')
+$TestFlag = (Read-Host -Prompt 'Do you want copy TestServer-F13_F13LOADER_ScanNGoGUI_LotTracking.logs ? If you want enter Y')
 ##for testServer log  
 $ListTestPath = New-Object System.Collections.ArrayList 
 write-host 'Your answer is: '  $TestFlag 
@@ -73,9 +87,15 @@ $copydate = Get-Date 01/01/2020
 if ($TestFlag -eq 'Y') {
     $ListTestPath.Addrange(@(Get-ChildItem  $RemotePath7 -Include *ScanNGo*, *F13*,*LotTracking* ))    
     $ListTestPath.Addrange(@(Get-ChildItem  $RemotePath8 -Include *ScanNGo*, *F13*,*LotTracking* )) 
-    Foreach ($file in (Get-ChildItem $ListTestPath)) {     
+    Foreach ($file in (Get-ChildItem $ListTestPath)) { 
+		$Dir=$file.Directory -replace '\\\\',''  
+		$Dir= -join ($testFolder,$Dir)
+        if (!(Test-Path $Dir)){
+            New-Item -ItemType Directory -Path $Dir
+            Write-Host "$Dir Folder Created Successfully"
+        }		
         If ($file.LastWriteTime -ge $copydate.DateTime) {
-            $passThru = ( Copy-Item -Path  $file.fullname -Destination $testFolder -passThru).count 
+            $passThru = ( Copy-Item -Path  $file.fullname -Destination $Dir -passThru).count 
             if ($passThru -gt 0) { 
                 write-host $file " " $file.LastWriteTime  
             }
@@ -118,7 +138,7 @@ for ( $i = 0; $i -lt $ListServerPath.count; $i++) {
         If ($file.LastWriteTime -ge $StartDate.DateTime -and $file.LastWriteTime -le $EndDate.DateTime ) {  
             $localpath=""
             if([String]::IsNullOrEmpty($TmepPath)){  
-                $localpath=-join($targetFolder,"LotTracking\")
+                  $localpath=-join($targetFolder,"LotTracking\")
             }
             else{
                 $localpath= -join($targetFolder,$TmepPath) 
