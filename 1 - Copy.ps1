@@ -8,7 +8,7 @@ $LocalPath = "C:\AAA\"
 
 
 $StartDate = Get-Date (Read-Host -Prompt 'Enter the start date of the logs, Ex: 11/28/2019 or 11/28/2019 09:00:00')
-$EndDate = Get-Date (Read-Host -Prompt 'Enter the   End  date of the logs,  Ex: 12/03/2019 or 12/03/2019 09:00:00')
+$EndDate = Get-Date (Read-Host -Prompt 'Enter th    e   End  date of the logs,  Ex: 12/03/2019 or 12/03/2019 09:00:00')
  
 Write-Host $StacrtDate
 Write-Host $EndDate
